@@ -1,0 +1,21 @@
+{
+  "duco" : {
+    "type": "serial",
+    "device": "/dev/serial0",
+    "baudrate": 115200,
+    "control": "gpio"
+  },
+  "mqtt" : {
+      "client_id": "duco",
+      "host": "127.0.0.1",
+      "port": 1883,
+      "keepalive": 60,
+      "bind_address": "",
+      "username": null,
+      "password": null,
+      "qos": 0,
+      "pub_topic_namespace": "value/duco",
+      "sub_topic_namespace": "set/duco",
+      "retain": true
+  }
+}

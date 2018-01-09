@@ -1,0 +1,12 @@
+[Unit]
+Description=Python DUCO MQTT bridge
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/usr/lib/py-duco-mqtt
+ExecStart=/usr/bin/python .
+
+[Install]
+WantedBy=multi-user.target
