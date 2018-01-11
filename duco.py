@@ -20,17 +20,22 @@ _running = None
 settings = None
 mqtt_client = None
 conn = None
+ctrl = None
 topic_namespace = None
 
 def init():
-    global _running, settings, mqtt_client, conn, topic_namespace
+    global _running, settings, mqtt_client, conn, topic_namespace, ctrl
     # Default settings
     settings = {
         "duco" : {
             "type": "serial",
             "device": "/dev/serial0",
-            "baudrate": 115200,
-            "control": "gpio"
+            "baudrate": 115200
+        },
+        "control": {
+            "type": "gpio",
+            "active_low": True,
+            "states": {}
         },
         "mqtt" : {
             "client_id": "duco",
@@ -93,6 +98,17 @@ def init():
 
     conn = duco_type(settings['duco'])
 
+
+    control_types = {
+        "gpio" : lambda: __import__('control_gpio',
+                      globals(), locals(), ['DucoboxGpioControl'], 0) \
+                      .DucoboxGpioControl,
+    }
+    my_type = settings['control']['type']
+    if my_type in control_types:
+        control_type = control_types[my_type]()
+        ctrl = control_type(settings['control'])
+
     _running = True
 
 
@@ -100,6 +116,11 @@ def main():
     init()
     # TODO: bleeegh
     global _running
+
+    conn.open()
+    if ctrl != None:
+        ctrl.open()
+
     _worker = Thread(target=worker)
     _worker.start()
     try:
@@ -109,6 +130,10 @@ def main():
         log.warn("Handling exception")
         _running = False
         _worker.join()
+
+    conn.close()
+    if ctrl != None:
+        ctrl.close()
 
 
 def publish(topic, payload):
@@ -215,14 +240,16 @@ def on_mqtt_connect(client, userdata, flags, rc):
 
 def on_mqtt_message(client, userdata, msg):
     # Handle incoming messages
-    log.debug("Received message on topic {} with payload {}".format(
+    log.info("Received message on topic {} with payload {}".format(
                 msg.topic, str(msg.payload)))
+    namespace = settings['mqtt']['sub_topic_namespace']
     command_generators={
+        "{}/state".format(namespace): \
+            lambda _ :ctrl.set_state(_),
     }
     # Find the correct command generator from the dict above
-    command_generator = command_generators.get(msg.topic)
-    if command_generator:
-        # Get the command and send it to the Duco
-        command = command_generator(msg.payload)
-        log.info("Sending command: '{}'".format(command))
-        conn.write("{}\r".format(command))
+    command = command_generators.get(msg.topic)
+    if command:
+        log.debug("Calling command")
+        # Get the command and call it
+        command(msg.payload)

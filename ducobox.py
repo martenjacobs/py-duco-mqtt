@@ -12,6 +12,11 @@ class DucoboxClient(object):
         self.fail_retry_wait = 0.25
         self.read_timeout = 0.1
 
+    def open(self):
+        raise NotImplementedError("Abstract method")
+
+    def close(self):
+        raise NotImplementedError("Abstract method")
 
     def write(self, data):
         raise NotImplementedError("Abstract method")

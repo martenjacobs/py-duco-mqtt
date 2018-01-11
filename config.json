@@ -5,6 +5,24 @@
     "baudrate": 115200,
     "control": "gpio"
   },
+  "control": {
+      "type": "gpio",
+      "active_low": true,
+      "states": {
+          "CNT1" : {
+              "17": 0,
+              "27": 0
+          },
+          "CNT2" : {
+              "17": 1,
+              "27": 0
+          },
+          "CNT3" : {
+              "17": 0,
+              "27": 1
+          }
+      }
+  },
   "mqtt" : {
       "client_id": "duco",
       "host": "127.0.0.1",
