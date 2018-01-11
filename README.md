@@ -23,7 +23,9 @@ To build a cable, I used the following parts:
 
 # Control from GPIO
 Control of the box is not possible through the serial protocol (this was confirmed to me by Duco). So, to get around this, I added a two-channel relay board that emulates a manual 3-position switch (section 5A in the [Quick Start Guide](https://www.duco.eu/Wes/CDN/1/Attachments/Quick-Start-DucoBox-Silent-17xxxx_636506783259119017.pdf)). This allows setting the box to modes CNT1, CNT2 and CNT3. I wired it up like this:
+
 ![Wire diagram](wire-diagram.png?raw=true)
+
 L1 goes to the power input that also goes to the main board of the ducobox, and L2 and L3 go to the 3-position switch ports, as found in the QSG. The relays are controlled by GPIO 17 and 27. With the board I'm using, the relays are active-low (they're flipped when the GPIO is driven low).
 
 ## Supported MQTT brokers
@@ -128,7 +130,7 @@ By default, the service publishes messages to the following MQTT topics:
 - value/duco/fan/Actual _=> actual fan speed (rpm)_
 
 > If you've changed the pub_topic_namespace value in the configuration, replace `value/duco` with your configured value.
-> __TODO:__ Add description of all topics
+> __TODO:__ Improve description of all topics
 
 ### Subscription topics
 By default, the service listens to messages from the following MQTT topics:
@@ -136,12 +138,15 @@ By default, the service listens to messages from the following MQTT topics:
 - set/duco/state _=> state_
 
 > If you've changed the sub_topic_namespace value in the configuration, replace `set/duco` with your configured value.
-> __TODO:__ Add description of all topics
+> __TODO:__ Improve description of all topics
 
 # Home Assistant
 The following configuration can be used in Home Assistant:
 ```yaml
 sensor duco:
+  - platform: mqtt
+    state_topic: "value/duco"
+    name: "DUCO service on-line"
   - platform: mqtt
     state_topic: "value/duco/network/1/stat"
     name: "DUCO state"
