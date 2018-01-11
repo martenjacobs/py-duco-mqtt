@@ -128,7 +128,7 @@ By default, the service publishes messages to the following MQTT topics:
 - value/duco/fan/Actual _=> actual fan speed (rpm)_
 
 > If you've changed the pub_topic_namespace value in the configuration, replace `value/duco` with your configured value.
-> __TODO:__ Add description of all topics
+> __TODO:__ Improve description of all topics
 
 ### Subscription topics
 By default, the service listens to messages from the following MQTT topics:
@@ -136,12 +136,15 @@ By default, the service listens to messages from the following MQTT topics:
 - set/duco/state _=> state_
 
 > If you've changed the sub_topic_namespace value in the configuration, replace `set/duco` with your configured value.
-> __TODO:__ Add description of all topics
+> __TODO:__ Improve description of all topics
 
 # Home Assistant
 The following configuration can be used in Home Assistant:
 ```yaml
 sensor duco:
+  - platform: mqtt
+    state_topic: "value/duco"
+    name: "DUCO service on-line"
   - platform: mqtt
     state_topic: "value/duco/network/1/stat"
     name: "DUCO state"
