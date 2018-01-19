@@ -22,6 +22,7 @@ mqtt_client = None
 conn = None
 ctrl = None
 topic_namespace = None
+initial_get = True
 
 def init():
     global _running, settings, mqtt_client, conn, topic_namespace, ctrl
@@ -146,37 +147,20 @@ def publish(topic, payload):
 
 def worker():
     # TODO: clean this up
-    global _running
+    global _running, initial_get
     _running = True
-    log.info("Reading initial data")
-    while _running:
-        try:
-            netw = get_network_data(conn)
-            for (t, v) in pathify(netw, "{}/network".format(topic_namespace)):
-                if v is not None:
-                    publish(t, v)
-            fan  = get_fan_speed(conn)
-            for (t, v) in pathify(fan, "{}/fan".format(topic_namespace)):
-                publish(t, v)
-            temp = get_temperature(conn)
-            publish("{}/temp".format(topic_namespace), temp)
-            co2  = get_co2(conn)
-            publish("{}/co2".format(topic_namespace), co2)
-            humi  = get_humidity(conn)
-            publish("{}/humi".format(topic_namespace), humi)
-        except Exception as e:
-            log.warn("An exception occured, retry in 15 seconds", exc_info=True)
-            sleep(15)
-            continue
-        break
-
-    for _ in range(15):
-        sleep(1)
-        if not _running:
-            break
+    initial_get = True
 
     log.info("Starting read loop")
     while _running:
+        if initial_get:
+            initial_get = False
+            netw = {}
+            fan  = {}
+            co2 = None
+            humi = None
+            temp = None
+
         try:
             _netw = get_network_data(conn)
             cnetw = changes(netw, _netw)
@@ -225,6 +209,9 @@ def worker():
                 break
 
 
+def get_all(_):
+    global initial_get
+    initial_get = True
 
 def on_mqtt_connect(client, userdata, flags, rc):
     # Subscribe to all topics in our namespace when we're connected. Send out
@@ -246,6 +233,8 @@ def on_mqtt_message(client, userdata, msg):
     command_generators={
         "{}/state".format(namespace): \
             lambda _ :ctrl.set_state(_),
+        "{}/get".format(namespace): \
+            get_all,
     }
     # Find the correct command generator from the dict above
     command = command_generators.get(msg.topic)
